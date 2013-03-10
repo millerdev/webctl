@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Pogo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/jquery.mobile-1.3.0.min.css" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="/static/jquery.mobile-1.3.0.min.js"></script>
+    <script src="/static/script.js"></script>
+  </head>
+  <body>
+    <div data-role="page" id="tv_page">
+      <div data-role="header"><h1>TV Volume</h1></div>
+      <div data-role="content">
+        <form id="tv_volume_form" action="/ctl" data-ajax="false">
+          <input type="range" name="tv_vol" id="tv_vol" min="0" max="100" disabled="disabled">
+          <select name="tv_toggle" id="tv_toggle" data-role="slider" disabled="disabled">
+            <option value="off">Off</option>
+            <option value="on">On</option>
+          </select>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
