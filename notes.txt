@@ -1,0 +1,98 @@
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TODO
+
+- improve webctl
+  - add current samplerate
+  - add source switch
+  - add volume control for SqueezeLite
+
+- reboot on schedule (daily?)
+  - verify that webclt starts on boot
+  - alternative: fix memory leak
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+commands
+
+# prevent crackling sound when running without dmix/resampling
+squeezelite -a 500:4 -n Pogo -o squeeze &
+# this seems better: lower latency, tested on both 48KHz and 44.1KHz
+squeezelite -n Pogo -o squeeze -a 100
+
+# alsaloop (TV Line in, 48KHz)
+alsaloop -C line_in -P line --sync=0 --tlatency=100000
+# lower latency, higher CPU, works when not using dmix
+alsaloop -C line_in -P line --sync=0 --tlatency=20000
+
+# check current sample rates
+cat /proc/asound/card0/pcm0p/sub0/hw_params
+cat /proc/asound/card0/pcm0c/sub0/hw_params
+# or
+cat /proc/asound/card0/pcm0*/sub0/hw_params
+
+# top CPU users
+ps -eo pcpu,pid,args | sort -k 1 -r | head -5
+
+# free memory (%)
+free -t | grep "buffers/cache" | awk '{print $4/($3+$4) * 100}'
+
+# deploy webctl to pogo
+rsync -a --progress --exclude=.* --exclude=temp . pogo:/opt/webctl
+ssh pogo "/etc/init.d/webctl restart"
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+problems and solutions
+
+- resampling not working (very high CPU, unresponsive processes, no sound)
+  - solution: switch to speexrate_best
+    - seems to work better than samplerate_* (libsamplerate0)
+
+- same sample rate for all streams
+  - 48KHz - best sound quality
+  - 44.1KH - poor sound quality
+    - in TV/Line in?
+    - ?? in SqueezeLite, possibly due to buffer size
+  - solution: eliminate dmix from alsa config
+    - caveat: cannot listen to multiple streams at once (no problem)
+    - alsaloop will not start if squeezelite is powered on (a good thing?)
+
+- crackling, very poor sound quality from SqueezeLite, even at native stream sample rate
+  - solution: increase buffer time
+    - "-a 100" (100ms) seems to work well (default is 20ms)
+
+- crackling, very poor sound quality from ShairPlay
+
+- clicking sound on power on/off squeezelite
+- clicking sound on new samplerate
+- webctl does not start on boot
+- memory leak (kernel?)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+info page design
+
+content:
+- uptime
+- free memory
+- top CPU usage
+- audio hardware parameters:
+  - playback
+  - capture
+
+#! /bin/bash
+# sysinfo.sh
+echo Uptime: $(uptime | sed -r 's/.*up(.*) [0-9]+ users?,/\1/')
+echo ""
+echo Free memory: $(free -t | grep "buffers/cache" | awk '{print $4/($3+$4) * 100}')%
+echo ""
+echo "Top processes"
+ps -eo pcpu,pid,args | sort -k 1 -r | head -5
+echo ""
+echo "Audio playback parameters"
+cat /proc/asound/card0/pcm0p/sub0/hw_params
+echo ""
+echo "Audio capture parameters"
+cat /proc/asound/card0/pcm0c/sub0/hw_params
+echo ""
+echo Wifi $(iwconfig 2> /dev/null | grep 'Link Quality' | sed -r 's/^ *//')
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+

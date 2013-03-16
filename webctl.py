@@ -10,8 +10,7 @@ from bottle import (route, run, template, static_file, request, response,
 
 BASE_DIR = join(dirname(abspath(__file__)), "static")
 AMIXER = "/usr/bin/amixer"
-AMIXER_CARD = "0"
-AMIXER_CHANNEL = "Line in"
+TV_CHANNEL = "Line in"
 AMIXER_VOLUME_EXP = re.compile(r"Front Left: \d+ \[(\d+)%\]")
 ALSA_LOOP_SERVICE = "/etc/init.d/alsaloop"
 
@@ -34,13 +33,13 @@ def tv_volume(value=None):
         integer between 0 and 100 inclusive.
     :returns: TV volume integer between 0 and 100 inclusive.
     """
-    cmd = [AMIXER, "-c", AMIXER_CARD]
+    cmd = [AMIXER]
     if value is not None:
         assert value >= 0 and value <= 100, value
         percent = "{}%".format(value)
-        out = check_output(cmd + ["sset", AMIXER_CHANNEL, percent])
+        out = check_output(cmd + ["sset", TV_CHANNEL, percent])
     else:
-        out = check_output(cmd + ["sget", AMIXER_CHANNEL])
+        out = check_output(cmd + ["sget", TV_CHANNEL])
     match = AMIXER_VOLUME_EXP.search(out)
     if match:
         return int(match.group(1))
@@ -85,8 +84,10 @@ def main():
     parser = argparse.ArgumentParser(description="Pogo controller web server")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("-p", "--port", default=80, type=int)
+    parser.add_argument("--reload", action="store_true", default=False,
+        help="Auto-reload on script change.")
     args = parser.parse_args()
-    run(host=args.host, port=args.port)
+    run(host=args.host, port=args.port, reloader=args.reload)
 
 if __name__ == "__main__":
     main()
