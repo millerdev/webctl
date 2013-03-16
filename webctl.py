@@ -8,23 +8,25 @@ from subprocess import check_output, call, CalledProcessError
 from bottle import (route, run, template, static_file, request, response,
     redirect)
 
-BASE_DIR = join(dirname(abspath(__file__)), "static")
+BASE_DIR = join(dirname(abspath(__file__)))
+STATIC_DIR = join(BASE_DIR, "static")
 AMIXER = "/usr/bin/amixer"
 TV_CHANNEL = "Line in"
 AMIXER_VOLUME_EXP = re.compile(r"Front Left: \d+ \[(\d+)%\]")
 ALSA_LOOP_SERVICE = "/etc/init.d/alsaloop"
+SYSINFO_COMMAND = join(BASE_DIR, 'sysinfo.sh')
 
 amixer_state = {}
 
 @route("/")
 def index():
-    return static_file("index.html", root=BASE_DIR)
+    return static_file("index.html", root=STATIC_DIR)
 
-@route("/static/<filename>")
-def static(filename):
-    if not filename or filename == "index.html":
+@route("/static/<filepath:path>")
+def static(filepath):
+    if not filepath or filepath == "index.html":
         return redirect("/")
-    return static_file(filename, root=BASE_DIR)
+    return static_file(filepath, root=STATIC_DIR)
 
 def tv_volume(value=None):
     """Get/update TV volume
@@ -79,6 +81,14 @@ def set_ctl(actions=[("volume", tv_volume), ("loopback", loop_status)]):
     """Update mixer controls and return their updated state"""
     data = request.json
     return {field: action(data.get(field)) for field, action in actions}
+
+@route("/system-info")
+def system_info():
+    try:
+        return check_output(SYSINFO_COMMAND)
+    except Exception as err:
+        return "Cannot load system info:\n{}: {}" \
+            .format(type(err).__name__, err)
 
 def main():
     parser = argparse.ArgumentParser(description="Pogo controller web server")

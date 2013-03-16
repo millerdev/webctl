@@ -12,7 +12,10 @@
   </head>
   <body>
     <div data-role="page" id="tv_page">
-      <div data-role="header"><h1>TV Volume</h1></div>
+      <div data-role="header">
+        <a href="#info_page" data-icon="info">Info</a>
+        <h1>TV Volume</h1>
+      </div>
       <div data-role="content">
         <form id="tv_volume_form" action="/ctl" data-ajax="false">
           <input type="range" name="tv_vol" id="tv_vol" min="0" max="100" disabled="disabled">
@@ -22,6 +25,14 @@
           </select>
         </form>
       </div>
+    </div>
+    <div data-role="page" id="info_page">
+      <div data-role="header">
+        <a href="#tv_page" data-direction="reverse" data-icon="home">Back</a>
+        <h1>System Info</h1>
+        <a href="#system_info" id="info_refresh" data-icon="refresh">Refresh</a>
+      </div>
+      <div class="scrollable"><pre id="system_info"></pre></div>
     </div>
   </body>
 </html>

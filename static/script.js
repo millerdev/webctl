@@ -23,21 +23,30 @@ $(document).ready(function() {
     var set_volume = SquashEvents(100);
     var url = $("#tv_volume_form").attr("action")
 
-    $.get(url, {}, function (data) {
-        var tv_toggle = $('#tv_toggle');
-        var tv_vol = $('#tv_vol');
-        if (data.loopback !== undefined) {
-            tv_toggle.val(data.loopback);
-        }
-        tv_volume_value = data.volume;
-        if (data.volume !== undefined) {
-            tv_vol.val(data.volume);
-        }
-        tv_vol.slider("enable");
-        tv_toggle.slider("enable");
-        tv_vol.slider("refresh");
-        tv_toggle.slider("refresh");
-    }, "json");
+    function setup_main_page() {
+        $.mobile.loading("show");
+        $.get(url, {}, function (data) {
+            var tv_toggle = $('#tv_toggle');
+            var tv_vol = $('#tv_vol');
+            if (data.loopback !== undefined) {
+                tv_toggle.val(data.loopback);
+            }
+            tv_volume_value = data.volume;
+            if (data.volume !== undefined) {
+                tv_vol.val(data.volume);
+            }
+            tv_vol.slider("enable");
+            tv_toggle.slider("enable");
+            tv_vol.slider("refresh");
+            tv_toggle.slider("refresh");
+            $.mobile.loading("hide");
+        }, "json");
+    };
+    setup_main_page();
+
+    $('#tv_page').on("pageshow", function (event, ui) {
+        setup_main_page();
+    });
 
     $('#tv_vol').change(function (event, ui) {
         var val = parseInt($(this).val());
@@ -59,6 +68,23 @@ $(document).ready(function() {
                 slider.val(data.loopback);
             }
         }, "json");
+    });
+
+    function load_system_info(el) {
+        $.mobile.loading("show");
+        $.get("/system-info", {}, function (data) {
+            $.mobile.loading("hide");
+            $("#system_info").text(data);
+        }, "text");
+    };
+
+    $('#info_page').on("pageshow", function (event, ui) {
+        load_system_info();
+    });
+
+    $('#info_refresh').on("click", function (event, ui) {
+        load_system_info();
+        return false;
     });
 
 });

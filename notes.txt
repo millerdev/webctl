@@ -73,26 +73,10 @@ content:
 - uptime
 - free memory
 - top CPU usage
+- wifi stats
 - audio hardware parameters:
   - playback
   - capture
-
-#! /bin/bash
-# sysinfo.sh
-echo Uptime: $(uptime | sed -r 's/.*up(.*) [0-9]+ users?,/\1/')
-echo ""
-echo Free memory: $(free -t | grep "buffers/cache" | awk '{print $4/($3+$4) * 100}')%
-echo ""
-echo "Top processes"
-ps -eo pcpu,pid,args | sort -k 1 -r | head -5
-echo ""
-echo "Audio playback parameters"
-cat /proc/asound/card0/pcm0p/sub0/hw_params
-echo ""
-echo "Audio capture parameters"
-cat /proc/asound/card0/pcm0c/sub0/hw_params
-echo ""
-echo Wifi $(iwconfig 2> /dev/null | grep 'Link Quality' | sed -r 's/^ *//')
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
