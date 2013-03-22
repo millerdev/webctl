@@ -13,6 +13,11 @@ TODO
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 commands
 
+# alsaloop audio switching commands:
+alsaloop -C line_in -P line --sync=0 --tlatency=100000
+alsaloop -C squeeze_loop -P line_out --sync=0 --tlatency=50000
+alsaloop -C shairport_loop -P line_out --sync=0 --tlatency=50000
+
 # prevent crackling sound when running without dmix/resampling
 squeezelite -a 500:4 -n Pogo -o squeeze &
 # this seems better: lower latency, tested on both 48KHz and 44.1KHz
@@ -58,6 +63,15 @@ problems and solutions
 - crackling, very poor sound quality from SqueezeLite, even at native stream sample rate
   - solution: increase buffer time
     - "-a 100" (100ms) seems to work well (default is 20ms)
+
+- cannot reset alsa config
+  - solution: execute the following commands
+    /etc/init.d/alsa-utils stop
+    chmod -x /etc/init.d/alsa-utils
+    rm /var/lib/alsa/asound.state
+    reboot
+    chmod +x /etc/init.d/alsa-utils
+    /etc/init.d/alsa-utils start
 
 - crackling, very poor sound quality from ShairPlay
 
