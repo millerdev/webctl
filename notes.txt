@@ -9,9 +9,9 @@ TODO
 x- fix airpogo sound quality
 
 - improve webctl
-  - bug in volume control when webpage is initialized with TV or AirPogo selected
   - refresh button for main page?
   - add volume control for SqueezeLite
+x  - bug in volume control ?when webpage is initialized with TV or AirPogo selected?
 xx  - mute during source switch
 x  - fix volume (TV not working?, airpogo not tested)
 x  - add mute (master)
@@ -49,7 +49,7 @@ ps -eo pcpu,pid,args | sort -k 1 -r | head -5
 free -t | grep "buffers/cache" | awk '{print $4/($3+$4) * 100}'
 
 # deploy webctl to pogo
-rsync -a --progress --exclude=.* --exclude=temp . pogo:/opt/webctl
+rsync -av --exclude=.* --exclude=temp . pogo:/opt/webctl
 ssh pogo "/etc/init.d/webctl restart"
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

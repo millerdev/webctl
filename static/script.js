@@ -80,7 +80,8 @@ $(document).ready(function() {
     $('#volume').change(function (event, ui) {
         var val = parseInt($(this).val());
         if (val === volume_value) return;
-        var source = $('input[name=sound_source]').val();
+        volume_value = val;
+        var source = $('input[name=sound_source]:checked').val();
         var data = {};
         data[source + "_volume"] = val;
         set_volume(function () { json_post(url, data); });
