@@ -2,9 +2,13 @@
 TODO
 
 - improve webctl
-  - add current samplerate
-  - add source switch
+  - fix volume (TV not working?, airpogo not tested)
+  - mute during source switch
+  - refresh button for main page?
   - add volume control for SqueezeLite
+x - add mute (master)
+x - add current samplerate
+x - add source switch
 
 - reboot on schedule (daily?)
   - verify that webclt starts on boot
@@ -16,7 +20,7 @@ commands
 # alsaloop audio switching commands:
 alsaloop -C line_in -P line --sync=0 --tlatency=100000
 alsaloop -C squeeze_loop -P line_out --sync=0 --tlatency=50000
-alsaloop -C shairport_loop -P line_out --sync=0 --tlatency=50000
+alsaloop -C airpogo_loop -P line_out --sync=0 --tlatency=50000
 
 # prevent crackling sound when running without dmix/resampling
 squeezelite -a 500:4 -n Pogo -o squeeze &

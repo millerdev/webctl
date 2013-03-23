@@ -2,6 +2,9 @@
 import argparse
 import json
 import re
+import sys
+import traceback
+from functools import partial
 from os.path import abspath, dirname, join
 from subprocess import check_output, call, CalledProcessError
 
@@ -10,13 +13,25 @@ from bottle import (route, run, template, static_file, request, response,
 
 BASE_DIR = join(dirname(abspath(__file__)))
 STATIC_DIR = join(BASE_DIR, "static")
+
 AMIXER = "/usr/bin/amixer"
-TV_CHANNEL = "Line in"
 AMIXER_VOLUME_EXP = re.compile(r"Front Left: \d+ \[(\d+)%\]")
-ALSA_LOOP_SERVICE = "/etc/init.d/alsaloop"
+AMIXER_MUTE_EXP = re.compile(r"Front Left: [^\n]+\[(on|off)\]")
+TV_CHANNEL = "Line in"
+AIRPOGO_CHANNEL = "AirPogo"
+
+ALSALOOP_SERVICE = "/etc/init.d/alsaloop"
+ALSALOOP_CONF = "/etc/default/alsaloop"
+ALSALOOP_ARGS = {
+    "squeeze": 'DAEMON_ARGS="-C squeeze_loop -P line_out --sync=0 --tlatency=50000"',
+    "airpogo": 'DAEMON_ARGS="-C airpogo_loop -P line_out --sync=0 --tlatency=50000"',
+    "tv": 'DAEMON_ARGS="-C line_in -P line --sync=0 --tlatency=50000"',
+}
+ALSALOOP_PROC_CHECK = "ps x | grep alsaloop | grep -v grep"
+ALSALOOP_PROC_REGEX = re.compile("alsaloop -C ([a-z]+)_")
+
 SYSINFO_COMMAND = join(BASE_DIR, 'sysinfo.sh')
 
-amixer_state = {}
 
 @route("/")
 def index():
@@ -28,59 +43,89 @@ def static(filepath):
         return redirect("/")
     return static_file(filepath, root=STATIC_DIR)
 
-def tv_volume(value=None):
-    """Get/update TV volume
+def volume(channel, value=None):
+    """Get/set volume
 
-    :param value: Update TV volume if not None. Must be None or an
+    :param channel: Alsa mixer channel to read/adjust.
+    :param value: Update volume if not None. Must be None or an
         integer between 0 and 100 inclusive.
-    :returns: TV volume integer between 0 and 100 inclusive.
+    :returns: Volume integer between 0 and 100 inclusive.
     """
-    cmd = [AMIXER]
-    if value is not None:
-        assert value >= 0 and value <= 100, value
+    if isinstance(value, (int, long)) and value >= 0 and value <= 100:
         percent = "{}%".format(value)
-        out = check_output(cmd + ["sset", TV_CHANNEL, percent])
+        cmd = [AMIXER, "sset", channel, percent]
     else:
-        out = check_output(cmd + ["sget", TV_CHANNEL])
-    match = AMIXER_VOLUME_EXP.search(out)
-    if match:
-        return int(match.group(1))
-    return None
-
-def loop_status(value=None):
-    """Get/update TV loopback status
-
-    :param value: Update TV volume if not None. Acceptable values are
-        "on", "off" and None.
-    :returns: TV volume integer between 0 and 100.
-    """
-    if value is not None:
-        if value == "off":
-            error = call([
-                "timeout", "--kill-after", "35s", "36s",
-                ALSA_LOOP_SERVICE, "stop",
-            ])
-            if error:
-                call(["killall", "-9", "alsaloop"])
-        else:
-            assert value == "on"
-            call([ALSA_LOOP_SERVICE, "start"])
+        cmd = [AMIXER, "sget", channel]
     try:
-        out = check_output([ALSA_LOOP_SERVICE, "status"])
+        out = check_output(cmd)
     except CalledProcessError as err:
-        return "off"
-    return "on" if "alsaloop is running" in out else "off"
+        traceback.print_exc(file=sys.stderr)
+        return None
+    match = AMIXER_VOLUME_EXP.search(out)
+    return int(match.group(1)) if match else None
+
+tv_volume = partial(volume, TV_CHANNEL)
+airpogo_volume = partial(volume, AIRPOGO_CHANNEL)
+
+def master_mute(value=None):
+    """Get/set master mute
+
+    :param value: Set value of mute switch to "on" or "off". Do not change
+        mute setting if not given or None.
+    :returns: Current value of master mute switch ("on" or "off"). None if
+        the setting cannot be determined.
+    """
+    if value in ["on", "off"]:
+        percent = "unmute" if value == "on" else "mute"
+        cmd = [AMIXER, "sset", "PCM", percent]
+    else:
+        cmd = [AMIXER, "sget", "PCM"]
+    try:
+        out = check_output(cmd)
+    except CalledProcessError as err:
+        traceback.print_exc(file=sys.stderr)
+        return None
+    match = AMIXER_MUTE_EXP.search(out)
+    return match.group(1) if match else None
+
+def sound_source(value=None):
+    """Get/set selected sound source
+
+    :param value: Set sound source if not None. Acceptable values are
+        "squeeze", "tv", "airpogo" and None.
+    :returns: "squeeze", "tv", "airpogo", or None.
+    """
+    if value in ["squeeze", "tv", "airpogo"]:
+        with open(ALSALOOP_CONF, "w") as f:
+            f.write(ALSALOOP_ARGS[value] + "\n")
+        call([ALSALOOP_SERVICE, "restart"])
+    try:
+        out = check_output(ALSALOOP_PROC_CHECK, shell=True)
+    except CalledProcessError as err:
+        return None
+    match = ALSALOOP_PROC_REGEX.search(out)
+    return match.group(1) if match else None
+
+control_map = {
+    "master_mute": master_mute,
+    "sound_source": sound_source,
+    "tv_volume": tv_volume,
+    "airpogo_volume": airpogo_volume,
+}
 
 @route("/ctl")
 def get_ctl():
     """Get the state of the mixer controls"""
-    return json.dumps({"volume": tv_volume(), "loopback": loop_status()})
+    return json.dumps({key: action()
+        for key, action in control_map.iteritems()})
 
 @route("/ctl", method="POST")
-def set_ctl(actions=[("volume", tv_volume), ("loopback", loop_status)]):
+def set_ctl():
     """Update mixer controls and return their updated state"""
     data = request.json
-    return {field: action(data.get(field)) for field, action in actions}
+    ignore = lambda value: None
+    return {key: control_map.get(key, ignore)(value)
+        for key, value in data.iteritems()}
 
 @route("/system-info")
 def system_info():

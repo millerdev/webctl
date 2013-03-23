@@ -11,24 +11,38 @@
     <script src="/static/script.js"></script>
   </head>
   <body>
-    <div data-role="page" id="tv_page">
+    <div data-role="page" id="main_page">
       <div data-role="header">
         <a href="#info_page" data-icon="info">Info</a>
-        <h1>TV Volume</h1>
+        <h1>Pogo</h1>
       </div>
       <div data-role="content">
-        <form id="tv_volume_form" action="/ctl" data-ajax="false">
-          <input type="range" name="tv_vol" id="tv_vol" min="0" max="100" disabled="disabled">
-          <select name="tv_toggle" id="tv_toggle" data-role="slider" disabled="disabled">
+        <form id="control_form" action="/ctl" data-ajax="false">
+          <select name="master_mute" id="master_mute" data-role="slider" disabled="disabled">
             <option value="off">Off</option>
             <option value="on">On</option>
           </select>
+          <fieldset data-role="controlgroup" data-type="horizontal">
+            <legend>Sound Source</legend>
+            <input name="sound_source" id="sound_source_squeeze" value="squeeze" type="radio" disabled="disabled">
+            <label for="sound_source_squeeze">Squeeze</label>
+            <input name="sound_source" id="sound_source_tv" value="tv" type="radio" disabled="disabled">
+            <label for="sound_source_tv">TV</label>
+            <input name="sound_source" id="sound_source_airpogo" value="airpogo" type="radio" disabled="disabled">
+            <label for="sound_source_airpogo">AirPogo</label>
+          </fieldset>
+          <label for="tv_vol" style="padding-top: 1em">TV Volume</label>
+          <input type="range" name="tv_vol" id="tv_vol" min="0" max="100" disabled="disabled">
+          <label for="airpogo_vol" style="padding-top: 2em">AirPogo Volume</label>
+          <input type="range" name="airpogo_vol" id="airpogo_vol" min="0" max="100" disabled="disabled">
+          <!--label for="squeeze_vol" style="padding-top: 2em">Squeeze Volume</label>
+          <input type="range" name="squeeze_vol" id="squeeze_vol" min="0" max="100" disabled="disabled"-->
         </form>
       </div>
     </div>
     <div data-role="page" id="info_page">
       <div data-role="header">
-        <a href="#tv_page" data-direction="reverse" data-icon="home">Back</a>
+        <a href="#main_page" data-direction="reverse" data-icon="home">Back</a>
         <h1>System Info</h1>
         <a href="#system_info" id="info_refresh" data-icon="refresh">Refresh</a>
       </div>
