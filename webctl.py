@@ -33,30 +33,6 @@ ALSALOOP_PROC_REGEX = re.compile("alsaloop -C ([a-z]+)_")
 SYSINFO_COMMAND = join(BASE_DIR, 'sysinfo.sh')
 
 
-def volume(channel, value=None):
-    """Get/set volume
-
-    :param channel: Alsa mixer channel to read/adjust.
-    :param value: Update volume if not None. Must be None or an
-        integer between 0 and 100 inclusive.
-    :returns: Volume integer between 0 and 100 inclusive.
-    """
-    if isinstance(value, (int, long)) and value >= 0 and value <= 100:
-        percent = "{}%".format(value)
-        cmd = [AMIXER, "sset", channel, percent]
-    else:
-        cmd = [AMIXER, "sget", channel]
-    try:
-        out = check_output(cmd)
-    except CalledProcessError as err:
-        traceback.print_exc(file=sys.stderr)
-        return None
-    match = AMIXER_VOLUME_EXP.search(out)
-    return int(match.group(1)) if match else None
-
-tv_volume = partial(volume, TV_CHANNEL)
-airpogo_volume = partial(volume, AIRPOGO_CHANNEL)
-
 def mute(value=None):
     """Get/set mute setting of master output device
 
@@ -95,11 +71,32 @@ def source(value=None):
     newval = match.group(1) if match else None
     return "tv" if newval == "line" else newval
 
+def volume(channel, value=None):
+    """Get/set volume
+
+    :param channel: Alsa mixer channel to read/adjust.
+    :param value: Update volume if not None. Must be None or an
+        integer between 0 and 100 inclusive.
+    :returns: Volume integer between 0 and 100 inclusive.
+    """
+    if isinstance(value, (int, long)) and value >= 0 and value <= 100:
+        percent = "{}%".format(value)
+        cmd = [AMIXER, "sset", channel, percent]
+    else:
+        cmd = [AMIXER, "sget", channel]
+    try:
+        out = check_output(cmd)
+    except CalledProcessError as err:
+        traceback.print_exc(file=sys.stderr)
+        return None
+    match = AMIXER_VOLUME_EXP.search(out)
+    return int(match.group(1)) if match else None
+
 control_map = {
     "mute": mute,
     "source": source,
-    "tv_volume": tv_volume,
-    "airpogo_volume": airpogo_volume,
+    "tv_volume": partial(volume, TV_CHANNEL),
+    "airpogo_volume": partial(volume, AIRPOGO_CHANNEL),
 }
 
 
