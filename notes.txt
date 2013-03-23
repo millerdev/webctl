@@ -2,13 +2,15 @@
 TODO
 
 - improve webctl
-  - fix volume (TV not working?, airpogo not tested)
-  - mute during source switch
   - refresh button for main page?
   - add volume control for SqueezeLite
+xx- mute during source switch
+x - fix volume (TV not working?, airpogo not tested)
 x - add mute (master)
 x - add current samplerate
 x - add source switch
+
+- fix airpogo sound quality
 
 - reboot on schedule (daily?)
   - verify that webclt starts on boot

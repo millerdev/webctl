@@ -33,16 +33,6 @@ ALSALOOP_PROC_REGEX = re.compile("alsaloop -C ([a-z]+)_")
 SYSINFO_COMMAND = join(BASE_DIR, 'sysinfo.sh')
 
 
-@route("/")
-def index():
-    return static_file("index.html", root=STATIC_DIR)
-
-@route("/static/<filepath:path>")
-def static(filepath):
-    if not filepath or filepath == "index.html":
-        return redirect("/")
-    return static_file(filepath, root=STATIC_DIR)
-
 def volume(channel, value=None):
     """Get/set volume
 
@@ -70,8 +60,8 @@ airpogo_volume = partial(volume, AIRPOGO_CHANNEL)
 def master_mute(value=None):
     """Get/set master mute
 
-    :param value: Set value of mute switch to "on" or "off". Do not change
-        mute setting if not given or None.
+    :param value: Turn sound "on" (unmute) or "off" (mute). Do not change
+        mute setting if None.
     :returns: Current value of master mute switch ("on" or "off"). None if
         the setting cannot be determined.
     """
@@ -113,6 +103,17 @@ control_map = {
     "airpogo_volume": airpogo_volume,
 }
 
+
+@route("/")
+def index():
+    return static_file("index.html", root=STATIC_DIR)
+
+@route("/static/<filepath:path>")
+def static(filepath):
+    if not filepath or filepath == "index.html":
+        return redirect("/")
+    return static_file(filepath, root=STATIC_DIR)
+
 @route("/ctl")
 def get_ctl():
     """Get the state of the mixer controls"""
@@ -134,6 +135,7 @@ def system_info():
     except Exception as err:
         return "Cannot load system info:\n{}: {}" \
             .format(type(err).__name__, err)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Pogo controller web server")
