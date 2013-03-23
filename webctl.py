@@ -94,7 +94,8 @@ def sound_source(value=None):
     except CalledProcessError as err:
         return None
     match = ALSALOOP_PROC_REGEX.search(out)
-    return match.group(1) if match else None
+    newval = match.group(1) if match else None
+    return "tv" if newval == "line" else newval
 
 control_map = {
     "master_mute": master_mute,

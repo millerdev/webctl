@@ -1,12 +1,13 @@
 $(document).ready(function() {
 
-    function json_post(url, data) {
+    function json_post(url, data, success_callback) {
         $.ajax({
             url: url,
             type: "POST",
             data: JSON.stringify(data),
             contentType: "application/json",
             dataType: "json",
+            success: success_callback,
         });
     };
 
@@ -18,11 +19,7 @@ $(document).ready(function() {
         };
     };
 
-    // used to prevent change event feedback loop
-    var sound_src_value = null;
-    var tv_volume_value = null;
-    var sp_volume_value = null;
-
+    var volume_value = null; // used to prevent change event feedback loop
     var set_volume = SquashEvents(100);
     var url = $("#control_form").attr("action")
 
@@ -31,37 +28,36 @@ $(document).ready(function() {
         $.get(url, {}, function (data) {
             var master_mute = $('#master_mute');
             var sound_source = $('input[name=sound_source]');
-            var tv_vol = $('#tv_vol');
-            var sp_vol = $('#airpogo_vol');
             if (data.master_mute !== undefined && data.master_mute !== null) {
                 master_mute.val(data.master_mute);
                 master_mute.slider("enable");
                 master_mute.slider("refresh");
             }
-            sound_src_value = data.sound_source
             if (data.sound_source !== undefined && data.sound_source !== null) {
                 var selector = "[value=" + data.sound_source + "]";
                 sound_source.filter(selector).attr("checked", true);
                 sound_source.checkboxradio("enable");
                 sound_source.checkboxradio("refresh");
-            }
-            tv_volume_value = data.tv_volume;
-            if (data.tv_volume !== undefined && data.tv_volume !== null) {
-                tv_vol.val(data.tv_volume);
-                tv_vol.slider("enable");
-                tv_vol.slider("refresh");
-            }
-            sp_volume_value = data.airpogo_volume;
-            if (data.airpogo_volume !== undefined
-                    && data.airpogo_volume !== null) {
-                sp_vol.val(data.airpogo_volume);
-                sp_vol.slider("enable");
-                sp_vol.slider("refresh");
+                setup_volume(data[data.sound_source + "_volume"]);
             }
             $.mobile.loading("hide");
         }, "json");
-    };
-    setup_main_page();
+    }
+
+    function setup_volume(value) {
+        var volume = $('#volume');
+        volume_value = value;
+        if (value !== undefined && value !== null) {
+            volume.slider("enable");
+            volume.val(value);
+            volume.slider("refresh");
+        } else {
+            volume.val(0);
+            volume.slider("refresh");
+            volume.val(""); // clear numeric value
+            volume.slider("disable");
+        }
+    }
 
     $('#main_page').on("pageshow", function (event, ui) {
         setup_main_page();
@@ -72,25 +68,22 @@ $(document).ready(function() {
     });
 
     $('input[name=sound_source]').change(function (event, ui) {
-        json_post(url, {"sound_source": $(this).val()});
-    });
-
-    $('#tv_vol').change(function (event, ui) {
-        var val = parseInt($(this).val());
-        if (val === tv_volume_value) return;
-        tv_volume_value = val;
-        set_volume(function () {
-            json_post(url, {"tv_volume": val});
+        var source = $(this).val();
+        var data = {"sound_source": source}
+        var volume_key = source + "_volume"
+        data[volume_key] = null; // request volume value in return data
+        json_post(url, data, function (data) {
+            setup_volume(data[volume_key]);
         });
     });
 
-    $('#airpogo_vol').change(function (event, ui) {
+    $('#volume').change(function (event, ui) {
         var val = parseInt($(this).val());
-        if (val === sp_volume_value) return;
-        sp_volume_value = val;
-        set_volume(function () {
-            json_post(url, {"airpogo_volume": val});
-        });
+        if (val === volume_value) return;
+        var source = $('input[name=sound_source]').val();
+        var data = {};
+        data[source + "_volume"] = val;
+        set_volume(function () { json_post(url, data); });
     });
 
     function load_system_info(el) {
@@ -110,4 +103,5 @@ $(document).ready(function() {
         return false;
     });
 
+    setup_main_page();
 });
