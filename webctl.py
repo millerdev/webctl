@@ -78,7 +78,7 @@ def master_mute(value=None):
     match = AMIXER_MUTE_EXP.search(out)
     return match.group(1) if match else None
 
-def sound_source(value=None):
+def source(value=None):
     """Get/set selected sound source
 
     :param value: Set sound source if not None. Acceptable values are
@@ -99,7 +99,7 @@ def sound_source(value=None):
 
 control_map = {
     "master_mute": master_mute,
-    "sound_source": sound_source,
+    "source": source,
     "tv_volume": tv_volume,
     "airpogo_volume": airpogo_volume,
 }

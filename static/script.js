@@ -27,18 +27,18 @@ $(document).ready(function() {
         $.mobile.loading("show");
         $.get(url, {}, function (data) {
             var master_mute = $('#master_mute');
-            var sound_source = $('input[name=sound_source]');
+            var source = $('input[name=source]');
             if (data.master_mute !== undefined && data.master_mute !== null) {
                 master_mute.val(data.master_mute);
                 master_mute.slider("enable");
                 master_mute.slider("refresh");
             }
-            if (data.sound_source !== undefined && data.sound_source !== null) {
-                var selector = "[value=" + data.sound_source + "]";
-                sound_source.filter(selector).attr("checked", true);
-                sound_source.checkboxradio("enable");
-                sound_source.checkboxradio("refresh");
-                setup_volume(data[data.sound_source + "_volume"]);
+            if (data.source !== undefined && data.source !== null) {
+                var selector = "[value=" + data.source + "]";
+                source.filter(selector).attr("checked", true);
+                source.checkboxradio("enable");
+                source.checkboxradio("refresh");
+                setup_volume(data[data.source + "_volume"]);
             }
             $.mobile.loading("hide");
         }, "json");
@@ -67,10 +67,10 @@ $(document).ready(function() {
         json_post(url, {"master_mute": $(this).val()});
     });
 
-    $('input[name=sound_source]').change(function (event, ui) {
-        var source = $(this).val();
-        var data = {"sound_source": source}
-        var volume_key = source + "_volume"
+    $('input[name=source]').change(function (event, ui) {
+        var source_val = $(this).val();
+        var data = {"source": source_val}
+        var volume_key = source_val + "_volume"
         data[volume_key] = null; // request volume value in return data
         json_post(url, data, function (data) {
             setup_volume(data[volume_key]);
@@ -81,9 +81,9 @@ $(document).ready(function() {
         var val = parseInt($(this).val());
         if (val === volume_value) return;
         volume_value = val;
-        var source = $('input[name=sound_source]:checked').val();
+        var source_val = $('input[name=source]:checked').val();
         var data = {};
-        data[source + "_volume"] = val;
+        data[source_val + "_volume"] = val;
         set_volume(function () { json_post(url, data); });
     });
 
