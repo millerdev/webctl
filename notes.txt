@@ -1,6 +1,13 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 TODO
 
+- fix memory leak
+  - reboot on schedule (daily?)
+  - alternative: fix memory leak
+- make webclt start on boot
+- make alsaloop start on boot
+- fix airpogo sound quality
+
 - improve webctl
   - refresh button for main page?
   - add volume control for SqueezeLite
@@ -9,12 +16,6 @@ x - fix volume (TV not working?, airpogo not tested)
 x - add mute (master)
 x - add current samplerate
 x - add source switch
-
-- fix airpogo sound quality
-
-- reboot on schedule (daily?)
-  - verify that webclt starts on boot
-  - alternative: fix memory leak
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 commands
