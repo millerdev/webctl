@@ -26,18 +26,18 @@ $(document).ready(function() {
     function setup_main_page() {
         $.mobile.loading("show");
         $.get(url, {}, function (data) {
-            var master_mute = $('#master_mute');
-            var source = $('input[name=source]');
-            if (data.master_mute !== undefined && data.master_mute !== null) {
-                master_mute.val(data.master_mute);
-                master_mute.slider("enable");
-                master_mute.slider("refresh");
+            var mute = $('#mute');
+            var sources = $('input[name=source]');
+            if (data.mute !== undefined && data.mute !== null) {
+                mute.attr("checked", data.mute);
+                mute.checkboxradio("enable");
+                mute.checkboxradio("refresh");
             }
             if (data.source !== undefined && data.source !== null) {
                 var selector = "[value=" + data.source + "]";
-                source.filter(selector).attr("checked", true);
-                source.checkboxradio("enable");
-                source.checkboxradio("refresh");
+                sources.filter(selector).attr("checked", true);
+                sources.checkboxradio("enable");
+                sources.checkboxradio("refresh");
                 setup_volume(data[data.source + "_volume"]);
             }
             $.mobile.loading("hide");
@@ -63,8 +63,8 @@ $(document).ready(function() {
         setup_main_page();
     });
 
-    $('#master_mute').on("slidestop", function (event, ui) {
-        json_post(url, {"master_mute": $(this).val()});
+    $('#mute').change(function (event, ui) {
+        json_post(url, {"mute": $(this).is(":checked")});
     });
 
     $('input[name=source]').change(function (event, ui) {

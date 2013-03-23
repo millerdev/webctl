@@ -1,3 +1,7 @@
-.scrollable {
+.info {
     overflow-x: auto;
+}
+
+.volume_label {
+    padding-top: 1em;
 }

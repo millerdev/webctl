@@ -57,17 +57,15 @@ def volume(channel, value=None):
 tv_volume = partial(volume, TV_CHANNEL)
 airpogo_volume = partial(volume, AIRPOGO_CHANNEL)
 
-def master_mute(value=None):
-    """Get/set master mute
+def mute(value=None):
+    """Get/set mute setting of master output device
 
-    :param value: Turn sound "on" (unmute) or "off" (mute). Do not change
+    :param value: Mute master output if true, unmute if false. Do not change
         mute setting if None.
-    :returns: Current value of master mute switch ("on" or "off"). None if
-        the setting cannot be determined.
+    :returns: True if master output is muted else false. None if unknown.
     """
-    if value in ["on", "off"]:
-        percent = "unmute" if value == "on" else "mute"
-        cmd = [AMIXER, "sset", "PCM", percent]
+    if value is not None:
+        cmd = [AMIXER, "sset", "PCM", ("mute" if value else "unmute")]
     else:
         cmd = [AMIXER, "sget", "PCM"]
     try:
@@ -76,7 +74,7 @@ def master_mute(value=None):
         traceback.print_exc(file=sys.stderr)
         return None
     match = AMIXER_MUTE_EXP.search(out)
-    return match.group(1) if match else None
+    return match.group(1) == "off" if match else None
 
 def source(value=None):
     """Get/set selected sound source
@@ -98,7 +96,7 @@ def source(value=None):
     return "tv" if newval == "line" else newval
 
 control_map = {
-    "master_mute": master_mute,
+    "mute": mute,
     "source": source,
     "tv_volume": tv_volume,
     "airpogo_volume": airpogo_volume,

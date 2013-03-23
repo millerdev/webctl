@@ -18,10 +18,10 @@
       </div>
       <div data-role="content">
         <form id="control_form" action="/ctl" data-ajax="false">
-          <select name="master_mute" id="master_mute" data-role="slider" disabled="disabled">
-            <option value="off">Off</option>
-            <option value="on">On</option>
-          </select>
+          <label for="mute">
+            <input type="checkbox" name="mute" id="mute" disabled="disabled">
+            Mute
+          </label>
           <fieldset data-role="controlgroup" data-type="horizontal">
             <legend>Source</legend>
             <input name="source" id="source_squeeze" value="squeeze" type="radio" disabled="disabled">
@@ -31,7 +31,7 @@
             <input name="source" id="source_airpogo" value="airpogo" type="radio" disabled="disabled">
             <label for="source_airpogo">AirPogo</label>
           </fieldset>
-          <label for="volume" style="padding-top: 1em">Volume</label>
+          <label for="volume" class="volume_label">Volume</label>
           <input type="range" name="volume" id="volume" min="0" max="100" disabled="disabled">
         </form>
       </div>
@@ -42,7 +42,7 @@
         <h1>System Info</h1>
         <a href="#system_info" id="info_refresh" data-icon="refresh">Refresh</a>
       </div>
-      <div class="scrollable"><pre id="system_info"></pre></div>
+      <div class="info"><pre id="system_info"></pre></div>
     </div>
   </body>
 </html>
