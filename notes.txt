@@ -6,16 +6,17 @@ TODO
   - alternative: fix memory leak
 - make webclt start on boot
 - make alsaloop start on boot
-- fix airpogo sound quality
+x- fix airpogo sound quality
 
 - improve webctl
+  - bug in volume control when webpage is initialized with TV or AirPogo selected
   - refresh button for main page?
   - add volume control for SqueezeLite
-xx- mute during source switch
-x - fix volume (TV not working?, airpogo not tested)
-x - add mute (master)
-x - add current samplerate
-x - add source switch
+xx  - mute during source switch
+x  - fix volume (TV not working?, airpogo not tested)
+x  - add mute (master)
+x  - add current samplerate
+x  - add source switch
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 commands
@@ -81,6 +82,9 @@ problems and solutions
     /etc/init.d/alsa-utils start
 
 - crackling, very poor sound quality from ShairPlay
+  - solution: set "period_time=100000" in /etc/libao.conf
+    - cat /proc/asound/card1/pcm0p/sub2/hw_params # check period_size and buffer_size
+    - seems to work best when hw_params buffer_size and period_size are equal
 
 - clicking sound on power on/off squeezelite
 - clicking sound on new samplerate
