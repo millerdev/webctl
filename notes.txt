@@ -4,14 +4,15 @@ TODO
 - fix memory leak
   - reboot on schedule (daily?)
   - alternative: fix memory leak
-- make webclt start on boot
-- make alsaloop start on boot
+x- make webclt start on boot
+x- make alsaloop start on boot
 x- fix airpogo sound quality
 
 - improve webctl
-  - refresh button for main page?
   - add volume control for SqueezeLite
-x  - bug in volume control ?when webpage is initialized with TV or AirPogo selected?
+xx  - refresh button for main page?
+x  - bug in volume control ?when webpage is initialized with TV or AirPogo
+x    selected?
 xx  - mute during source switch
 x  - fix volume (TV not working?, airpogo not tested)
 x  - add mute (master)
@@ -21,8 +22,12 @@ x  - add source switch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 commands
 
+# deploy webctl to pogo
+rsync -av --exclude=.* --exclude=temp . pogo:/opt/webctl
+ssh pogo "/etc/init.d/webctl restart"
+
 # alsaloop audio switching commands:
-alsaloop -C line_in -P line --sync=0 --tlatency=100000
+alsaloop -C line_in -P line --sync=0 --tlatency=50000
 alsaloop -C squeeze_loop -P line_out --sync=0 --tlatency=50000
 alsaloop -C airpogo_loop -P line_out --sync=0 --tlatency=50000
 
@@ -47,10 +52,6 @@ ps -eo pcpu,pid,args | sort -k 1 -r | head -5
 
 # free memory (%)
 free -t | grep "buffers/cache" | awk '{print $4/($3+$4) * 100}'
-
-# deploy webctl to pogo
-rsync -av --exclude=.* --exclude=temp . pogo:/opt/webctl
-ssh pogo "/etc/init.d/webctl restart"
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 problems and solutions
@@ -83,12 +84,18 @@ problems and solutions
 
 - crackling, very poor sound quality from ShairPlay
   - solution: set "period_time=100000" in /etc/libao.conf
-    - cat /proc/asound/card1/pcm0p/sub2/hw_params # check period_size and buffer_size
+    - check period_size and buffer_size:
+      cat /proc/asound/card1/pcm0p/sub2/hw_params
     - seems to work best when hw_params buffer_size and period_size are equal
+      (4410)
+
+- webctl does not start on boot
+  - solution: update-rc.d webctl defaults
+    - run this command with the name of each script in init.d that should start
+      on boot
 
 - clicking sound on power on/off squeezelite
 - clicking sound on new samplerate
-- webctl does not start on boot
 - memory leak (kernel?)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
