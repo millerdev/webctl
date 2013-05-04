@@ -56,6 +56,10 @@ free -t | grep "buffers/cache" | awk '{print $4/($3+$4) * 100}'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 problems and solutions
 
+- PogoPlug does not boot with "machid" uBoot variable set
+  - solution: unset "machid" in uBoot environment
+    fw_setenv machid
+
 - resampling not working (very high CPU, unresponsive processes, no sound)
   - solution: switch to speexrate_best
     - seems to work better than samplerate_* (libsamplerate0)
@@ -94,9 +98,17 @@ problems and solutions
     - run this command with the name of each script in init.d that should start
       on boot
 
+- memory leak (kernel?)
+  - troubleshooting steps
+    - leak seems to be in size-512 slabs as seen in slabtop (kernel leak)
+      SUnreclaim in /proc/meminfo increases constantly after boot
+    - guess: wifi driver is leaking
+      - first attempt: disable power save mode (create file and reboot):
+        # cat /etc/modprobe.d/8192cu.conf
+        options 8192cu rtw_power_mgnt=0
+
 - clicking sound on power on/off squeezelite
 - clicking sound on new samplerate
-- memory leak (kernel?)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 info page design
