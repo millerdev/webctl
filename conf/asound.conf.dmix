@@ -1,0 +1,163 @@
+# Use best samplerate conversion for better sound quality
+#defaults.pcm.rate_converter "samplerate_best"
+defaults.pcm.rate_converter "speexrate_best"
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Output devices
+
+# USB soundcard line output
+
+pcm.line_out
+{
+    type dmix
+    ipc_key 1024
+    ipc_perm 0666
+
+    slave
+    {
+        pcm "hw:0,0"
+        period_time 0
+        #buffer_time 0
+        period_size 2048
+        buffer_size 32768
+        #rate 44100
+    }
+}
+
+# Use only the first two channels for dmix
+
+bindings
+{
+    0 0     # from 0 => to 0
+    1 1     # from 1 => to 1
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Input devices
+
+# USB soundcard line input
+
+pcm.line_in
+{
+    type dsnoop
+    ipc_key 2048
+    slave.pcm "hw:0,0"
+    #slave.rate 44100
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Asym devices
+
+pcm.duplex
+{
+    type asym
+    playback.pcm "line_out"
+    capture.pcm "line_in"
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Hardware control devices
+
+ctl.mixer0
+{
+    type hw
+    card 0
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Volume controls
+
+# Default volume from things that we haven't or can't configure
+
+pcm.default_control
+{
+    type softvol
+    slave.pcm "duplex"
+
+    control
+    {
+        name "Default"
+        card 0
+    }
+}
+
+# SqueezeLite volume
+
+pcm.squeeze_control
+{
+    type softvol
+    slave.pcm "duplex"
+
+    control
+    {
+        name "SqueezeLite"
+        card 0
+    }
+}
+
+# ShairPort volume
+
+pcm.shairport_control
+{
+    type softvol
+    slave.pcm "duplex"
+
+    control
+    {
+        name "ShairPort"
+        card 0
+    }
+}
+
+# Line in volume
+
+pcm.line_in_control
+{
+    type softvol
+    slave.pcm "duplex"
+
+    control
+    {
+        name "Line in"
+        card 0
+    }
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Default ALSA devices
+
+pcm.!default
+{
+    type plug
+    slave.pcm "default_control"
+}
+
+pcm.default
+{
+    type plug
+    slave.pcm "default_control"
+}
+
+
+# Custom plug devices
+
+pcm.squeeze
+{
+    type plug
+    slave.pcm "squeeze_control"
+}
+
+pcm.shairport
+{
+    type plug
+    slave.pcm "shairport_control"
+}
+
+# Line in channel (use alsaloop service to route line_in -> line)
+
+pcm.line
+{
+    type plug
+    slave.pcm "line_in_control"
+}
+
