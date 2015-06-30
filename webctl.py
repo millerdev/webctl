@@ -7,6 +7,8 @@ import traceback
 from functools import partial
 from os.path import abspath, dirname, join
 from subprocess import check_output, call, CalledProcessError
+from threading import Thread
+from time import sleep
 
 from bottle import (route, run, template, static_file, request, response,
     redirect)
@@ -26,6 +28,11 @@ ALSALOOP_ARGS = {
     "squeeze": 'DAEMON_ARGS="-C squeeze_loop -P line_out --sync=0 --tlatency=50000"',
     "airpogo": 'DAEMON_ARGS="-C airpogo_loop -P line_out --sync=0 --tlatency=50000"',
     "tv": 'DAEMON_ARGS="-C line_in -P line --sync=0 --tlatency=50000"',
+}
+ALSALOOP_STATUS = {
+    "squeeze": '/proc/asound/Loopback/pcm0p/sub1/status',
+    "airpogo": '/proc/asound/Loopback/pcm0p/sub2/status',
+    #"tv":      '/proc/asound/Loopback/pcm0p/sub0/status',
 }
 ALSALOOP_PROC_CHECK = "ps x | grep alsaloop | grep -v grep"
 ALSALOOP_PROC_REGEX = re.compile("alsaloop -C ([a-z]+)_")
@@ -92,6 +99,21 @@ def volume(channel, value=None):
     match = AMIXER_VOLUME_EXP.search(out)
     return int(match.group(1)) if match else None
 
+def source_stats():
+    def stat(device):
+        with open(device) as fh:
+            return next(iter(fh), 'closed').strip() != 'closed'
+    return {src: stat(device) for src, device in ALSALOOP_STATUS.items()}
+
+def auto_source_switch():
+    stats = source_stats()
+    if stats.get(source()):
+        return # do not switch when current source is active
+    for src, status in stats.items():
+        if status:
+            source(src)
+            break
+
 control_map = {
     "mute": mute,
     "source": source,
@@ -127,11 +149,22 @@ def set_ctl():
 @route("/system-info")
 def system_info():
     try:
-        return check_output(SYSINFO_COMMAND)
+        out = check_output(SYSINFO_COMMAND)
+        stats = sorted(k for k, v in source_stats().items() if v)
+        out += "\nActive sources: %s" % " ".join(stats)
+        return out
     except Exception as err:
-        return "Cannot load system info:\n{}: {}" \
-            .format(type(err).__name__, err)
+        return "Cannot load system info:\n{}: {}\n{}" \
+            .format(type(err).__name__, err, traceback.format_exc())
 
+def setup_auto_source_switch():
+    def run():
+        while True:
+            auto_source_switch()
+            sleep(2)
+    thread = Thread(target=run)
+    thread.daemon = True
+    thread.start()
 
 def main():
     parser = argparse.ArgumentParser(description="Pogo controller web server")
@@ -140,6 +173,7 @@ def main():
     parser.add_argument("--reload", action="store_true", default=False,
         help="Auto-reload on script change.")
     args = parser.parse_args()
+    setup_auto_source_switch()
     run(host=args.host, port=args.port, reloader=args.reload)
 
 if __name__ == "__main__":
